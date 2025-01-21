@@ -1,0 +1,511 @@
+openapi: 3.0.0
+info:
+  title: BootCoin Wallet API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8091
+paths:
+  /v1/bootcoin:
+    get:
+      summary: Retrieve all bootcoin
+      operationId: getAllBootcoin
+      responses:
+        '200':
+          description: List of boot-coins
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BootcoinResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a bootcoin
+      operationId: createBootcoin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BootcoinRequest'
+      responses:
+        '201':
+          description: Bootcoin created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BootcoinResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bootcoin/{bootcoinId}:
+    get:
+      summary: Retrieve a Bootcoin by ID
+      operationId: getBootcoinById
+      parameters:
+        - name: bootcoinId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Bootcoin details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BootcoinResponse'
+        '404':
+          description: Bootcoin not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update
+      operationId: updateBootcoin
+      parameters:
+        - name: bootcoinId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BootcoinRequest'
+      responses:
+        '200':
+          description: Updated bootcoin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BootcoinResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          '404':
+            description: BootcoinId not found
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '500':
+            description: Internal server error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete a bootcoin
+      operationId: deleteBootcoin
+      parameters:
+        - name: bootcoinId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Bootcoin deleted
+        '404':
+          description: Bootcoin not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bootcoin/{phone}/balance:
+    get:
+      summary: Get Bootcoin balances
+      operationId: getBootcoinBalance
+      parameters:
+        - name: phone
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Bootcoin balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponse'
+        '404':
+          description: Phone not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bootcoin/{bootcoinId}/associate/{action}:
+    post:
+      summary: Associate a wallet to a debit card
+      operationId: associateWalletOrAccount
+      tags:
+        - Bootcoin
+      parameters:
+        - name: action
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: bootcoinId
+          in: path
+          required: true
+          description: Bootcoin ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssociateRequest'
+      responses:
+        '200':
+          description: Wallet successfully associated with the debit card
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssociateResponse'
+          '400':
+            description: Malformed Wallet data
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '404':
+            description: Wallet not found
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '500':
+            description: Internal server error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+  /v1/bootcoin/purchase:
+    post:
+      summary: Make a bootcoin purchase via yankin or transfer
+      operationId: createPurchaseBootcoin
+      tags:
+        - Purchase
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchaseRequest'
+      responses:
+        '200':
+          description: Purchase successfully completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseResponse'
+          '400':
+            description: Bad request error, such as insufficient balance or invalid data
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '404':
+            description: User or wallet not found
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '500':
+            description: Internal server error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+  /v1/bootcoin/accept-purchase/{operation}:
+    post:
+      summary: Accept bootcoin purchase
+      operationId: acceptPurchaseBootcoin
+      tags:
+        - Purchase
+      parameters:
+        - name: operation
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptPurchaseRequest'
+      responses:
+        '200':
+          description: Purchase successfully completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseResponse'
+          '400':
+            description: Bad request error, such as insufficient balance or invalid data
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '404':
+            description: User or wallet not found
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '500':
+            description: Internal server error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+  /v1/bootcoin/exchange-rate:
+    get:
+      summary: Retrieve all rate
+      operationId: getAllExchangeRate
+      responses:
+        '200':
+          description: List of exchange-rate
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RateResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a Exchange Rate
+      operationId: createExchangeRate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RateRequest'
+      responses:
+        '201':
+          description: Rate created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    BootcoinRequest:
+      type: object
+      required:
+        - name
+        - dni
+        - phone
+      properties:
+        name:
+          type: string
+        documentNumber:
+          type: string
+        documentType:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+    BootcoinResponse:
+      type: object
+      required:
+        - name
+        - dni
+        - phone
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        documentNumber:
+          type: string
+        documentType:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        accountId:
+          type: string
+        yankiId:
+          type: string,
+        bootcoin:
+          type: decimal
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - code
+        - message
+        - timestamp
+      properties:
+        status:
+          type: int
+        code:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    BalanceResponse:
+      type: object
+      properties:
+        bootcoinId:
+          type: string
+        phone:
+          type: string
+        balance:
+          type: decimal
+    AssociateRequest:
+      type: object
+      properties:
+        yankiId:
+          type: string
+        accountId:
+          type: string
+    AssociateResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        bootcoinId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    PurchaseRequest:
+      type: object
+      required:
+        - buyerId
+        - paymentMethod
+        - amount
+      properties:
+        buyerId:
+          type: string
+        paymentMethod:
+          type: string
+          enum: [ YANKI, TRANSFER]
+        amount:
+          type: decimal
+        description:
+          type: string
+    PurchaseResponse:
+      type: object
+      required:
+        - buyerId
+        - paymentMethod
+        - amount
+      properties:
+        id:
+          type: string
+        paymentMethod:
+          type: string
+        amount:
+          type: decimal
+        status:
+          type: string
+          enum: [ACCEPTED, PENDING, COMPLETED]
+        operation:
+          type: string
+        timestamp:
+          type: string
+          format : date-time
+    AcceptPurchaseRequest:
+      type: object
+      required:
+        - sellerId
+      properties:
+        sellerId:
+          type: string
+    RateRequest:
+      type: object
+      required:
+        - buyRate
+        - sellRate
+      properties:
+        buyRate:
+          type: decimal
+        sellRate:
+          type: decimal
+    RateResponse:
+      type: object
+      required:
+        - id
+        - buyRate
+        - sellRate
+      properties:
+        id:
+          type: string
+        buyRate:
+          type: decimal
+        sellRate:
+          type: decimal
+        createdDate:
+          type: string
+          format: date-time
+
+
