@@ -459,8 +459,9 @@ components:
         - buyerId
         - paymentMethod
         - amount
+        - operation
       properties:
-        id:
+        buyerId:
           type: string
         paymentMethod:
           type: string

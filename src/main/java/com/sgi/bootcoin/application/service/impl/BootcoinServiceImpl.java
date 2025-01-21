@@ -1,16 +1,17 @@
 package com.sgi.bootcoin.application.service.impl;
 
-import com.sgi.bootcoin.Infrastructure.subscriber.events.OrchestratorBootcoinEventResponse;
+import com.sgi.bootcoin.infrastructure.subscriber.events.OrchestratorBootcoinEventResponse;
 import com.sgi.bootcoin.domain.dto.UserDTO;
-import com.sgi.bootcoin.Infrastructure.exception.CustomException;
-import com.sgi.bootcoin.Infrastructure.mapper.BootcoinMapper;
-import com.sgi.bootcoin.Infrastructure.mapper.ExternalOrchestratorDataMapper;
-import com.sgi.bootcoin.Infrastructure.repository.BootcoinRepositoryJpa;
-import com.sgi.bootcoin.Infrastructure.subscriber.events.BankAccountEvent;
-import com.sgi.bootcoin.Infrastructure.subscriber.events.OrchestratorBootcoinEvent;
-import com.sgi.bootcoin.Infrastructure.subscriber.events.YankiEvent;
-import com.sgi.bootcoin.Infrastructure.subscriber.message.EventSender;
+import com.sgi.bootcoin.infrastructure.exception.CustomException;
+import com.sgi.bootcoin.infrastructure.mapper.BootcoinMapper;
+import com.sgi.bootcoin.infrastructure.mapper.ExternalOrchestratorDataMapper;
+import com.sgi.bootcoin.infrastructure.repository.BootcoinRepositoryJpa;
+import com.sgi.bootcoin.infrastructure.subscriber.events.BankAccountEvent;
+import com.sgi.bootcoin.infrastructure.subscriber.events.OrchestratorBootcoinEvent;
+import com.sgi.bootcoin.infrastructure.subscriber.events.YankiEvent;
+import com.sgi.bootcoin.infrastructure.subscriber.message.EventSender;
 import com.sgi.bootcoin.application.service.RedisService;
+import com.sgi.bootcoin.domain.dto.WalletDetailDTO;
 import com.sgi.bootcoin.domain.model.BootCoin;
 import com.sgi.bootcoin.domain.model.redis.BootCoinOrder;
 import com.sgi.bootcoin.domain.port.BootcoinService;
@@ -32,8 +33,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.sgi.bootcoin.Infrastructure.enums.MovementType.*;
-import static com.sgi.bootcoin.Infrastructure.enums.paymentMethod.TRANSFER;
+import static com.sgi.bootcoin.infrastructure.enums.MovementType.PURCHASE;
+import static com.sgi.bootcoin.infrastructure.enums.MovementType.SALE;
+import static com.sgi.bootcoin.infrastructure.enums.paymentMethod.TRANSFER;
 import static com.sgi.bootcoin.infrastructure.dto.PurchaseRequest.PaymentMethodEnum.YANKI;
 
 @Service
@@ -96,7 +98,7 @@ public class BootcoinServiceImpl implements BootcoinService {
     public Mono<BalanceResponse> getBootcoinBalance(String phone) {
         return repositoryJpa.findByPhone(phone)
                 .switchIfEmpty(Mono.error(new CustomException(CustomError.E_BOOTCOIN_NOT_FOUND)))
-                .flatMap(wallet -> Mono.just(BootcoinMapper.INSTANCE.toBalance(wallet)));
+                .flatMap(bootCoin -> Mono.just(BootcoinMapper.INSTANCE.toBalance(bootCoin)));
     }
 
     @Override
@@ -176,7 +178,8 @@ public class BootcoinServiceImpl implements BootcoinService {
                                                                         seller.setBootcoin(seller.getBootcoin().subtract(bootCoinPurchase));
                                                                         return repositoryJpa.saveAll(Flux.just(buyer, seller))
                                                                                 .last()
-                                                                                .map(BootcoinMapper.INSTANCE::toPurchaseResponse)
+                                                                                .map(bootCoin
+                                                                                        -> BootcoinMapper.INSTANCE.toPurchaseResponse(bootCoin,amountSales,operation))
                                                                                 .doOnTerminate(() -> {
                                                                                     UserDTO buyerUser = createUserBuyerAndSeller(buyer);
                                                                                     UserDTO sellerUser = createUserBuyerAndSeller(seller);
@@ -198,11 +201,12 @@ public class BootcoinServiceImpl implements BootcoinService {
     }
 
     @Override
-    public Mono<BootcoinResponse> associateYanki(String bootcoinId, String yankiId) {
+    public Mono<BootcoinResponse> associateYanki(String bootcoinId, String yankiId, WalletDetailDTO walletDetail) {
         return repositoryJpa.findById(bootcoinId)
                 .switchIfEmpty(Mono.error(new CustomException(CustomError.E_BOOTCOIN_NOT_FOUND)))
                 .flatMap(bootCoin -> {
                     bootCoin.setYankiId(yankiId);
+                    bootCoin.setYankiDetail(walletDetail);
                     return repositoryJpa.save(bootCoin);
                 }).map(BootcoinMapper.INSTANCE::map);
     }
@@ -233,28 +237,30 @@ public class BootcoinServiceImpl implements BootcoinService {
     private List<OrchestratorBootcoinEvent> toMapperOrchestratorEvent(BootCoin seller, BootCoin buyer, BootCoinOrder bootCoinOrder,
                                                                       RateResponse rateResponse, UserDTO sellerUser, UserDTO buyerUser,
                                                                       BigDecimal amountSales){
-        return List.of(
-              ExternalOrchestratorDataMapper.INSTANCE.map(buyer,
-                      bootCoinOrder, PURCHASE,
-                      bootCoinOrder.getAmount(),
-                      buyerUser, sellerUser,
-                      rateResponse, bootCoinOrder.getPaymentMethod()),
 
-             ExternalOrchestratorDataMapper.INSTANCE.map(seller,
-                     bootCoinOrder, SALE,
-                     amountSales, sellerUser,
-                     buyerUser,
-                     rateResponse,
-                     Optional.ofNullable(seller.getAccountId())
-                     .map(accountId -> TRANSFER.name())
-                     .orElseGet(() ->
-                             Optional.ofNullable(seller.getYankiId())
-                                 .map(yankiId -> YANKI.name())
-                                 .orElseThrow(() ->
-                                     new CustomException(CustomError.E_SELLER_ACCOUNT_NOT_ASSOCIATED)
-                             )
-                     ))
-        );
+        OrchestratorBootcoinEvent purchaseBootcoin = ExternalOrchestratorDataMapper.INSTANCE.map(buyer,
+                bootCoinOrder, PURCHASE, bootCoinOrder.getAmount(),
+                buyerUser, sellerUser,
+                rateResponse,
+                bootCoinOrder.getPaymentMethod());
+        purchaseBootcoin.setAccountId(Optional.ofNullable(buyer.getAccountId())
+                        .orElseGet(() ->
+                                buyer.getYankiDetail().getAccountId()));
+        OrchestratorBootcoinEvent saleBootcoin = ExternalOrchestratorDataMapper.INSTANCE.map(seller,
+                bootCoinOrder, SALE,
+                amountSales, sellerUser,
+                buyerUser,
+                rateResponse,
+                Optional.ofNullable(seller.getAccountId())
+                        .map(accountId -> TRANSFER.name())
+                        .orElseGet(() ->
+                                Optional.ofNullable(seller.getYankiId())
+                                        .map(yankiId -> YANKI.name())
+                                        .orElseThrow(() ->
+                                                new CustomException(CustomError.E_SELLER_ACCOUNT_NOT_ASSOCIATED)
+                                        )
+                        ));
+        return List.of(purchaseBootcoin, saleBootcoin);
     }
 
     private Mono<BootCoin> validatedBootcoinSeller(String sellerId, BigDecimal bootCoinPurchase){

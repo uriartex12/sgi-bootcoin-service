@@ -1,8 +1,8 @@
 package com.sgi.bootcoin.application.service.impl;
 
-import com.sgi.bootcoin.Infrastructure.subscriber.events.BankAccountExistEvent;
-import com.sgi.bootcoin.Infrastructure.subscriber.events.OrchestratorBootcoinEventResponse;
-import com.sgi.bootcoin.Infrastructure.subscriber.events.WalletExistEvent;
+import com.sgi.bootcoin.infrastructure.subscriber.events.BankAccountExistEvent;
+import com.sgi.bootcoin.infrastructure.subscriber.events.OrchestratorBootcoinEventResponse;
+import com.sgi.bootcoin.infrastructure.subscriber.events.WalletExistEvent;
 import com.sgi.bootcoin.application.service.EventHandleService;
 import com.sgi.bootcoin.application.service.RedisService;
 import com.sgi.bootcoin.domain.port.BootcoinService;
@@ -27,7 +27,8 @@ public class EventHandleServiceImpl implements EventHandleService {
             bootcoinService.associateBankAccount(bankAccountExistEvent.getBootcoinId(),
                     bankAccountExistEvent.getAccountId()).subscribe();
         }else {
-            log.error("Invalid bank account : {} ", bankAccountExistEvent.getAccountId());
+            log.error("Invalid bank account : {} ",
+                    bankAccountExistEvent.getAccountId());
         }
     }
 
@@ -35,9 +36,10 @@ public class EventHandleServiceImpl implements EventHandleService {
     public void validationExistYanki(WalletExistEvent walletExistEvent) {
         if (walletExistEvent.getExist()){
             bootcoinService.associateYanki(walletExistEvent.getBootcoinId(),
-                    walletExistEvent.getYankiId()).subscribe();
+                    walletExistEvent.getYankiId(), walletExistEvent.getWalletDetail()).subscribe();
         }else {
-            log.error("Invalid yanki Id : {} ", walletExistEvent.getYankiId());
+            log.error("Invalid yanki Id : {} ",
+                    walletExistEvent.getYankiId());
         }
     }
 

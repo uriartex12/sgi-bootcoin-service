@@ -1,10 +1,8 @@
 package com.sgi.bootcoin.domain.model;
 
+import com.sgi.bootcoin.domain.dto.WalletDetailDTO;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -18,6 +16,7 @@ import java.math.BigDecimal;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Document(collection = "bootcoin")
 @CompoundIndex(def = "{'id': 1, 'phone': 1, 'documentNumber': 1}", name = "id_phone_documentNumber_index", unique = true)
 public class BootCoin {
@@ -32,6 +31,7 @@ public class BootCoin {
     private String documentType;
     private String accountId;
     private String yankiId;
+    private WalletDetailDTO yankiDetail;
     @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal bootcoin;
 

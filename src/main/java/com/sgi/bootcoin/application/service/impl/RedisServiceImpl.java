@@ -39,7 +39,7 @@ public class RedisServiceImpl implements RedisService {
     }
 
     private Mono<BootCoinOrder> saveBootCoinToRedis(BootCoinOrder bootCoinOrder) {
-        return Mono.fromRunnable(() -> hashOperations.put(BOOTCOIN_HASH, bootCoinOrder.getBuyerId(), bootCoinOrder))
+        return Mono.fromRunnable(() -> hashOperations.put(BOOTCOIN_HASH, bootCoinOrder.getId(), bootCoinOrder))
                 .thenReturn(bootCoinOrder);
     }
 

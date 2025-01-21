@@ -1,7 +1,7 @@
 package com.sgi.bootcoin.application.service.impl;
 
-import com.sgi.bootcoin.Infrastructure.mapper.ExchangeRateMapper;
-import com.sgi.bootcoin.Infrastructure.repository.ExchangeRateRepositoryJpa;
+import com.sgi.bootcoin.infrastructure.mapper.ExchangeRateMapper;
+import com.sgi.bootcoin.infrastructure.repository.ExchangeRateRepositoryJpa;
 import com.sgi.bootcoin.domain.port.ExchangeRateService;
 import com.sgi.bootcoin.infrastructure.dto.RateRequest;
 import com.sgi.bootcoin.infrastructure.dto.RateResponse;

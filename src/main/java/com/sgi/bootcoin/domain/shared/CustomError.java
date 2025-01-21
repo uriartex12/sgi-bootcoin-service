@@ -1,6 +1,6 @@
 package com.sgi.bootcoin.domain.shared;
 
-import com.sgi.bootcoin.Infrastructure.exception.ApiError;
+import com.sgi.bootcoin.infrastructure.exception.ApiError;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
