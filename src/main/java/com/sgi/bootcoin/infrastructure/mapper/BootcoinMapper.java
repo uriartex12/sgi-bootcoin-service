@@ -22,7 +22,9 @@ public interface BootcoinMapper {
 
     BootcoinResponse map(BootCoin bootCoin);
 
-    BalanceResponse toBalance(BootCoin wallet);
+    @Mapping(target = "bootcoinId", source = "bootcoin.id")
+    @Mapping(target = "balance", source = "bootcoin.bootcoin")
+    BalanceResponse toBalance(BootCoin bootcoin);
 
     @Mapping(target = "operation", source = "bootCoinOrder.id")
     PurchaseResponse toPurchaseResponse(BootCoinOrder bootCoinOrder);

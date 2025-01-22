@@ -24,14 +24,14 @@ public class FactoryTest {
     public static <R> R toFactoryBootcoin(Class<R> response) {
         R account = response.getDeclaredConstructor().newInstance();
         if (account instanceof BootcoinRequest bootcoinRequest) {
-            return (R) initializeAccount(bootcoinRequest);
+            return (R) initializeBootcoin(bootcoinRequest);
         } else if (account instanceof BootcoinResponse bootcoinResponse) {
-            return (R) initializeAccount(bootcoinResponse);
+            return (R) initializeBootcoin(bootcoinResponse);
         }
         return account;
     }
 
-    private static BootcoinRequest initializeAccount(BootcoinRequest bootcoin) {
+    private static BootcoinRequest initializeBootcoin(BootcoinRequest bootcoin) {
         bootcoin.setDocumentNumber("712338232");
         bootcoin.setEmail("test@gmail.com");
         bootcoin.setName("test-bootcoin");
@@ -40,7 +40,7 @@ public class FactoryTest {
         return bootcoin;
     }
 
-    private static BootcoinResponse initializeAccount(BootcoinResponse bootcoin) {
+    private static BootcoinResponse initializeBootcoin(BootcoinResponse bootcoin) {
         bootcoin.id(UUID.randomUUID().toString());
         bootcoin.setDocumentNumber("712338232");
         bootcoin.setEmail("test@gmail.com");

@@ -2,7 +2,6 @@ package com.sgi.bootcoin.infrastructure.controller;
 
 import com.sgi.bootcoin.domain.port.BootcoinService;
 import com.sgi.bootcoin.domain.port.ExchangeRateService;
-import com.sgi.bootcoin.infrastructure.controller.V1Api;
 import com.sgi.bootcoin.infrastructure.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
